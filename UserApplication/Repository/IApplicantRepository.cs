@@ -1,11 +1,9 @@
-﻿using UserLibrary;
-
-namespace UserApplication.Repository
+﻿namespace UserApplication.Repository
 {
     public interface IApplicantRepository
     {
-        public Guid Create(Applicant applicant);
+        Guid Create(UserLibrary.Applicant applicant);
 
-        public Applicant GetById(Guid id);
+        UserLibrary.Applicant GetById(Guid id);
     }
 }

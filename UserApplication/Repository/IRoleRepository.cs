@@ -4,6 +4,6 @@ namespace UserApplication.Repository
 {
     public interface IRoleRepository
     {
-        public Role GetById(Guid idRole);
+        Role GetById(Guid idRole);
     }
 }

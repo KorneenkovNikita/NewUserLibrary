@@ -1,82 +1,101 @@
-﻿namespace UserLibrary
+﻿using UserLibrary.Exceptions;
+
+namespace UserLibrary
 {
-	public class Workflow
-	{
-		public ICollection<WorkflowStep> Steps { get; private set; }
-		public ICollection<StatusLogItem> Logs { get; private set; }
-		public int CurrentStepNumber { get; private set; }
-		public bool IsCompleted { get; private set; }
-		public bool IsRejected { get; private set; }
-		public Guid ID { get; init; }
+    public class Workflow
+    {
+        public ICollection<WorkflowStep> Steps { get; }
+        public ICollection<StatusLogItem> Logs { get; }
+        public int CurrentStepNumber { get; private set; }
+        public bool IsCompleted { get; private set; }
+        public bool IsRejected { get; private set; }
+        public Guid Id { get; }
 
-		public Workflow(ICollection<WorkflowStep> steps)
-		{
-			Steps = steps;
-			Logs = new List<StatusLogItem>();
-			IsCompleted = false;
-			CurrentStepNumber = steps.Select(i => i.StepN).Min();
-			ID = new Guid();
-		}
+        public Workflow(ICollection<WorkflowStep> steps)
+        {
+            if (steps.Count == 0)
+            {
+                throw new ArgumentException("Steps should not be empty", nameof(steps));
+            }
+            
+            Steps = steps;
+            Logs = new List<StatusLogItem>();
+            IsCompleted = false;
+            CurrentStepNumber = steps.Min(x=>x.StepN);
+            Id = Guid.NewGuid();
+        }
 
-		internal void Approved(User user)
-		{
-			if (IsCompleted) throw new Exception("All steps have been completed");
-			if (IsRejected) throw new Exception("This workflow has been rejected");
+        internal void Approved(User user)
+        {
+            if (user is null) throw new ArgumentNullException(nameof(user));
 
-			var currentStep = Steps.Where(i => i.StepN == CurrentStepNumber).First();
-			if (currentStep.IsCanApprove(user))
-			{
-				CurrentStepNumber++;
-				Logs.Add(new(user, $"step {currentStep.StepN} approved"));
-				IsCompleted = currentStep.StepN == Steps.Select(i => i.StepN).Max();
-			}
-			else
-			{
-				throw new Exception("This user cannot approve the current step");
-			}
-		}
+            if (IsCompleted) throw new WorkflowAlreadyCompletedException();
+            if (IsRejected) throw new WorkflowAlreadyRejectedException();
 
-		internal void Rejected(User user)
-		{
-			if (IsCompleted) throw new Exception("All steps have been completed");
-			if (IsRejected) throw new Exception("This workflow has been rejected");
+            var currentStep = Steps.First(i => i.StepN == CurrentStepNumber);
+            if (currentStep.IsCanApprove(user))
+            {
+                IsCompleted = currentStep.StepN == Steps.Max(i => i.StepN);
+                CurrentStepNumber = IsCompleted ? CurrentStepNumber : CurrentStepNumber + 1;
+                Logs.Add(new StatusLogItem(user, $"step {currentStep.StepN} approved"));
+            }
+            else
+            {
+                throw new ForbiddenForUserException();
+            }
+        }
 
-			var currentStep = Steps.Where(i => i.StepN == CurrentStepNumber).First();
-			if (currentStep.IsCanApprove(user))
-			{
-				Logs.Add(new(user, $"step {currentStep.StepN} rejected"));
-				IsRejected = true;
-			}
-			else
-			{
-				throw new Exception("This user cannot approve the current step");
-			}
-		}
+        internal void Rejected(User user)
+        {
+            if (user is null) throw new ArgumentNullException(nameof(user));
 
-		public void AddStep(User user)
-		{
-			var newStep = new WorkflowStep(user, Steps.Select(i => i.StepN).Max() + 1);
-			Steps.Add(newStep);
-			IsCompleted = false;
-		}
+            if (IsCompleted) throw new WorkflowAlreadyCompletedException();
+            if (IsRejected) throw new WorkflowAlreadyRejectedException();
 
-		public void AddStep(Role role)
-		{
-			var newStep = new WorkflowStep(role, Steps.Select(i => i.StepN).Max() + 1);
-			Steps.Add(newStep);
-			IsCompleted = false;
-		}
+            var currentStep = Steps.First(i => i.StepN == CurrentStepNumber);
+            if (currentStep.IsCanApprove(user))
+            {
+                Logs.Add(new StatusLogItem(user, $"step {currentStep.StepN} rejected"));
+                IsRejected = true;
+            }
+            else
+            {
+                throw new ForbiddenForUserException();
+            }
+        }
 
-		public void Reset(User user)
-		{
-			var currentStep = Steps.Where(i => i.StepN == CurrentStepNumber).First();
+        public void AddStep(User user)
+        {
+            if (user is null) throw new ArgumentNullException(nameof(user));
 
-			if (currentStep.IsCanApprove(user))
-			{
-				IsRejected = false;
-				IsCompleted = false;
-				CurrentStepNumber = Steps.Select(i => i.StepN).Min();
-			}
-		}
-	}
+            var newStep = new WorkflowStep(user, Steps.Select(i => i.StepN).Max() + 1);
+            Steps.Add(newStep);
+            IsCompleted = false;
+        }
+
+        public void AddStep(Role role)
+        {
+            if (role is null) throw new ArgumentNullException(nameof(role));
+
+            var newStep = new WorkflowStep(role, Steps.Max(i => i.StepN) + 1);
+            Steps.Add(newStep);
+            IsCompleted = false;
+        }
+
+        public void Reset(User user)
+        {
+            if (user is null) throw new ArgumentNullException(nameof(user));
+
+            var currentStep = Steps.First(i => i.StepN == CurrentStepNumber);
+
+            if (!currentStep.IsCanApprove(user))
+            {
+                return;
+            }
+
+            IsRejected = false;
+            IsCompleted = false;
+            CurrentStepNumber = Steps.Min(i => i.StepN);
+        }
+    }
 }

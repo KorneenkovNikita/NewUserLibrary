@@ -4,12 +4,12 @@ namespace UserApplication
 {
 	public interface IUnitOfWork
 	{
-		public IRoleRepository GetRoleRepository();
+		IRoleRepository GetRoleRepository();
 
-		public IUserRepository GetUserRepository();
+		IUserRepository GetUserRepository();
 
-		public IApplicantRepository GetApplicantRepository();
+		IApplicantRepository GetApplicantRepository();
 
-		public void Commit();
+		void Commit();
 	}
 }

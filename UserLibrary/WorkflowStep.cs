@@ -1,52 +1,57 @@
 ﻿namespace UserLibrary
 {
-	public class WorkflowStep
-	{
-		public User? ApprovedUser { get; init; }
-		public Role? ApprovedRole {get; init; }
-		public int StepN { get; init; }
+    public class WorkflowStep
+    {
+        public User? ApprovedUser { get; }
+        public Role? ApprovedRole { get; }
+        public int StepN { get; }
 
-		public WorkflowStep(User user, int stepN)
-		{
-			ApprovedUser = user ?? throw new ArgumentNullException("object cannot be null");
-			ApprovedRole = null;
-			StepN = stepN;
-		}
+        public WorkflowStep(User user, int stepN)
+        {
+            ApprovedUser = user ?? throw new ArgumentNullException(nameof(user));
+            ApprovedRole = null;
+            StepN = stepN;
+        }
 
-		public WorkflowStep(Role role, int stepN)
-		{
-			ApprovedUser = null;
-			ApprovedRole = role ?? throw new ArgumentNullException("object cannot be null");
-			StepN = stepN;
-		}
+        public WorkflowStep(Role role, int stepN)
+        {
+            ApprovedUser = null;
+            ApprovedRole = role ?? throw new ArgumentNullException(nameof(role));
+            StepN = stepN;
+        }
 
-		public bool IsCanApprove(User user)
-		{
-			if (user is not null)
-			{
-				if (ApprovedUser is not null) return Equals(ApprovedUser, user);
-				else return Equals(ApprovedRole, user.Role);
-			}
-			else
-			{
-				throw new NullReferenceException("object cannot be null");
-			}
-		}
+        public bool IsCanApprove(User user)
+        {
+            if (user is null) throw new ArgumentNullException(nameof(user));
 
-		public override bool Equals(object? obj)
-		{
-			if (obj is WorkflowStep equalStep)
-			{
-				return Equals(equalStep.ApprovedRole, ApprovedRole)
-					&& Equals(equalStep.ApprovedUser, ApprovedUser)
-					&& equalStep.StepN == StepN;
-			}
-			return false;
-		}
+            return ApprovedUser is not null ? Equals(ApprovedUser, user) : Equals(ApprovedRole, user.Role);
+        }
 
-		public override int GetHashCode()
-		{
-			return base.GetHashCode();
-		}
-	}
+        public override bool Equals(object? obj)
+        {
+            return obj switch
+            {
+                null => throw new ArgumentNullException(nameof(obj)),
+                WorkflowStep equalStep => Equals(equalStep.ApprovedRole, ApprovedRole) && Equals(equalStep.ApprovedUser, ApprovedUser) &&
+                                          equalStep.StepN == StepN,
+                _ => false
+            };
+        }
+
+        public override int GetHashCode()
+        {
+            var hash = StepN;
+            if (ApprovedRole is not null)
+            {
+                hash += ApprovedRole.GetHashCode();
+            }
+
+            if (ApprovedUser is not null)
+            {
+                hash += ApprovedUser.GetHashCode();
+            }
+
+            return hash;
+        }
+    }
 }

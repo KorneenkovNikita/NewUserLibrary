@@ -2,8 +2,9 @@
 {
 	public enum ApplicantStatusEnum
 	{
-		InProgress,
-		Approved,
-		Rejected
+		Unknown = 0,
+		InProgress = 1,
+		Approved = 2,
+		Rejected = 3
 	}
 }

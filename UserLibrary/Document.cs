@@ -1,12 +1,12 @@
 ﻿namespace UserLibrary
 {
-	public record Document
+	public class Document
 	{
-		public string FirstName { get; init; }
-		public string LastName { get; init; }
-		public DateTime BirthDate { get; init; }
-		public string Phone { get; init; }
-		public string WorkExperience { get; init; }
+		public string FirstName { get; }
+		public string LastName { get; }
+		public DateTime BirthDate { get; }
+		public string Phone { get; }
+		public string WorkExperience { get; }
 
 		public Document(string firstName, string lastName, DateTime birthDate, string phone, string workExperience)
 		{

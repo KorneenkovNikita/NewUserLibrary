@@ -1,9 +1,7 @@
-﻿using UserLibrary;
-
-namespace UserApplication
+﻿namespace UserApplication
 {
 	public interface IRequestContext
 	{
-		public User GetCurrentUser();
+		UserLibrary.User GetCurrentUser();
 	}
 }

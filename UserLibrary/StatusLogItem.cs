@@ -1,10 +1,10 @@
 ﻿namespace UserLibrary
 {
-	public record StatusLogItem
+	public class StatusLogItem
 	{
-		public User User { get; init; }
-		public DateTime LogDate { get; init; }
-		public string Message { get; init; }
+		public User User { get; }
+		public DateTime LogDate { get; }
+		public string Message { get; }
 
 		public StatusLogItem(User user, string message)
 		{
